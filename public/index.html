@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>ChatGPT API Chatbot</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        #chat-container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            height: 400px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background-color: #d1e7ff;
+            align-self: flex-end;
+        }
+
+        .bot-message {
+            background-color: #e2e2e2;
+            align-self: flex-start;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        #keywords {
+            width: 80%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #007bff;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        #loading {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.8);
+            text-align: center;
+            z-index: 1000;
+        }
+
+        #loading img {
+            margin-top: 200px;
+        }
+
+        select {
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>내 이름은 민순 </h1>
+
+    <!-- 스타일 선택 -->
+    <div>
+        <label for="style">대화 스타일 선택</label>
+        <select id="style">
+            <option value="simple">공포 분위기</option>
+            <option value="friendly">신나는 분위기</option>
+            <option value="technical">🎅🏻크리스마스 분위기🎅🏻</option>
+        </select>
+    </div>
+
+    <div id="chat-container"></div>
+
+    <div class="input-container">
+        <input type="text" id="keywords" placeholder="무엇이든 질문해보세요..." required />
+        <button onclick="chatGPT()">입력</button>
+    </div>
+
+    <div id="loading">
+        <img src="https://studentrights.sen.go.kr/images/common/loading.gif" />
+    </div>
+
+    <script>
+        $(document).ready(function () {
+            $('#loading').hide();
+        });
+
+        function chatGPT() {
+            const keywords = document.getElementById('keywords').value;
+            if (!keywords.trim()) return; // 빈 입력 무시
+
+            appendMessage(keywords, 'user-message');
+            $('#keywords').val('');
+            $('#loading').show();
+
+            const selectedStyle = document.getElementById('style').value;
+            let prompt = '';
+
+            if (selectedStyle === 'simple') {
+                prompt = "무섭고 스산한 분위기로 대답하세요.";
+            } else if (selectedStyle === 'friendly') {
+                prompt = "신나고 긍정적인 분위기로 대답하세요.";
+            } else if (selectedStyle === 'technical') {
+                prompt = "크리스마스 분위기로 대답하세요.";
+            }
+
+            const messages = [
+                { role: 'user', content: keywords + "\n\n" + prompt },
+            ];
+
+            // 백엔드 서버로 메시지 전송
+            fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    $('#loading').hide();
+                    appendMessage(data.choices[0].message.content, 'bot-message');
+                })
+                .catch(error => {
+                    $('#loading').hide();
+                    appendMessage("죄송합니다, 문제가 발생했습니다.", 'bot-message');
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+
+</html>
